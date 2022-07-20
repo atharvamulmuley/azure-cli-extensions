@@ -256,7 +256,7 @@ def create_connectedk8s(cmd, client, resource_group_name, cluster_name, correlat
 
     # Retrieving Helm chart OCI Artifact location
     if isCustomRegistryProvided:
-        registry_path = "{}/azurearck8s/azure-arc-k8sagents:{}".format(container_registry_repository, container_registry_agent_version)
+        registry_path = "{}/merge/private/azure-arc-k8sagents:{}".format(container_registry_repository, container_registry_agent_version)
         # Send private registry information to telemetry
         telemetry.add_extension_event('connectedk8s', {'Context.Default.AzureCLI.CustomContainerRegistry': container_registry_repository})
     else:
