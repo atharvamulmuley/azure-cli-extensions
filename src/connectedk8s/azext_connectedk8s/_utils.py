@@ -75,7 +75,7 @@ def get_chart_path(registry_path, kube_config, kube_context, helm_client_locatio
     os.environ['HELM_EXPERIMENTAL_OCI'] = '1'
     
     if container_registry_username and container_registry_password:
-        helm_login(registry_path, container_registry_username, container_registry_password)
+        helm_login(registry_path, container_registry_username, container_registry_password, helm_client_location)
 
     pull_helm_chart(registry_path, kube_config, kube_context, helm_client_location)
 
@@ -298,9 +298,9 @@ def get_container_registry(container_registry_repository):
     return container_registry_repository.split('/')[0]
 
 
-def helm_login(container_registry_repository, container_registry_username, container_registry_password):
+def helm_login(container_registry_repository, container_registry_username, container_registry_password, helm_client_location):
     container_registry = get_container_registry(container_registry_repository)
-    cmd_helm_login = ["helm", "registry", "login", container_registry, "--username", container_registry_username, "--password", container_registry_password]
+    cmd_helm_login = [helm_client_location, "registry", "login", container_registry, "--username", container_registry_username, "--password", container_registry_password]
     response_helm_install = Popen(cmd_helm_login, stdout=PIPE, stderr=PIPE)
     _, error_helm_install = response_helm_install.communicate()
     if response_helm_install.returncode != 0:
