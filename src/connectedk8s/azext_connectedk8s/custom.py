@@ -1833,16 +1833,32 @@ def client_side_proxy_wrapper(cmd,
     if cloud == consts.Azure_ChinaCloudName:
         CSP_Url = consts.CSP_Storage_Url_Mooncake
 
+    machine_type = platform.machine()
+
+    arch_string = ""
+    storage_uri = ""
+    if machine_type == "AMD64":
+        arch_string = "amd64"
+        storage_uri = CSP_Url
+    elif machine_type == "aarch64":
+        arch_string = "arm64"
+        storage_uri = "https://testatharvastorage.blob.core.windows.net"
+
+    if arch_string == "":
+        telemetry.set_exception(exception='Unsupported architecture for cli extension', fault_type=consts.Unsupported_Architecture_Fault_Type,
+                                summary=f'{machine_type} architecture is not supported in cli')
+        raise ClientRequestError(f'The {machine_type} architecture is not currently supported in connectedk8s cli.')
+
     # Creating installation location, request uri and older version exe location depending on OS
     if(operating_system == 'Windows'):
-        install_location_string = f'.clientproxy\\arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}.exe'
-        requestUri = f'{CSP_Url}/{consts.RELEASE_DATE_WINDOWS}/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}.exe'
+        install_location_string = f'.clientproxy\\arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}{arch_string}.exe'
+        requestUri = f'{storage_uri}/{consts.RELEASE_DATE_WINDOWS}/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}{arch_string}.exe'
         older_version_string = f'.clientproxy\\arcProxy{operating_system}*.exe'
         creds_string = r'.azure\accessTokens.json'
 
     elif(operating_system == 'Linux' or operating_system == 'Darwin'):
-        install_location_string = f'.clientproxy/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}'
-        requestUri = f'{CSP_Url}/{consts.RELEASE_DATE_LINUX}/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}'
+        install_location_string = f'.clientproxy/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}{arch_string}'
+        requestUri = f'{storage_uri}/{consts.RELEASE_DATE_LINUX}/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}{arch_string}'
         older_version_string = f'.clientproxy/arcProxy{operating_system}*'
         creds_string = r'.azure/accessTokens.json'
 
