@@ -416,7 +416,7 @@ def install_helm_client():
     if machine_type == "AMD64":
         arch_string = "amd64"
         storage_uri = consts.HELM_STORAGE_URL
-    elif machine_type == "ARM64":
+    elif machine_type == "aarch64":
         arch_string = "arm64"
         storage_uri = "https://testatharvastorage.blob.core.windows.net"
 
