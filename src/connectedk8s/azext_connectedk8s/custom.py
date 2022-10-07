@@ -411,18 +411,32 @@ def install_helm_client():
     operating_system = platform.system().lower()
     machine_type = platform.machine()
 
+    arch_string = ""
+    storage_uri = ""
+    if machine_type == "AMD64":
+        arch_string = "amd64"
+        storage_uri = consts.HELM_STORAGE_URL
+    elif machine_type == "ARM64":
+        arch_string = "arm64"
+        storage_uri = "https://testatharvastorage.blob.core.windows.net"
+
+    if arch_string == "":
+        telemetry.set_exception(exception='Unsupported architecture for cli extension', fault_type=consts.Unsupported_Architecture_Fault_Type,
+                                summary=f'{machine_type} architecture is not supported in cli')
+        raise ClientRequestError(f'The {machine_type} architecture is not currently supported in connectedk8s cli.')
+
     # Send machine telemetry
     telemetry.add_extension_event('connectedk8s', {'Context.Default.AzureCLI.MachineType': machine_type})
 
     # Set helm binary download & install locations
     if(operating_system == 'windows'):
-        download_location_string = f'.azure\\helm\\{consts.HELM_VERSION}\\helm-{consts.HELM_VERSION}-{operating_system}-amd64.zip'
-        install_location_string = f'.azure\\helm\\{consts.HELM_VERSION}\\{operating_system}-amd64\\helm.exe'
-        requestUri = f'{consts.HELM_STORAGE_URL}/helm/helm-{consts.HELM_VERSION}-{operating_system}-amd64.zip'
+        download_location_string = f'.azure\\helm\\{consts.HELM_VERSION}\\helm-{consts.HELM_VERSION}-{operating_system}-{arch_string}.zip'
+        install_location_string = f'.azure\\helm\\{consts.HELM_VERSION}\\{operating_system}-{arch_string}\\helm.exe'
+        requestUri = f'{storage_uri}/helm/helm-{consts.HELM_VERSION}-{operating_system}-{arch_string}.zip'
     elif(operating_system == 'linux' or operating_system == 'darwin'):
-        download_location_string = f'.azure/helm/{consts.HELM_VERSION}/helm-{consts.HELM_VERSION}-{operating_system}-amd64.tar.gz'
-        install_location_string = f'.azure/helm/{consts.HELM_VERSION}/{operating_system}-amd64/helm'
-        requestUri = f'{consts.HELM_STORAGE_URL}/helm/helm-{consts.HELM_VERSION}-{operating_system}-amd64.tar.gz'
+        download_location_string = f'.azure/helm/{consts.HELM_VERSION}/helm-{consts.HELM_VERSION}-{operating_system}-{arch_string}.tar.gz'
+        install_location_string = f'.azure/helm/{consts.HELM_VERSION}/{operating_system}-{arch_string}/helm'
+        requestUri = f'{storage_uri}/helm/helm-{consts.HELM_VERSION}-{operating_system}-{arch_string}.tar.gz'
     else:
         telemetry.set_exception(exception='Unsupported OS for installing helm client', fault_type=consts.Helm_Unsupported_OS_Fault_Type,
                                 summary=f'{operating_system} is not supported for installing helm client')
