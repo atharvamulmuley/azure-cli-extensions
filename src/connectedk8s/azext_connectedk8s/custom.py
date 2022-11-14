@@ -413,10 +413,10 @@ def install_helm_client():
 
     arch_string = ""
     storage_uri = ""
-    if machine_type == "AMD64":
+    if machine_type == "AMD64" or machine_type == "x86_64":
         arch_string = "amd64"
         storage_uri = consts.HELM_STORAGE_URL
-    elif machine_type == "aarch64":
+    elif machine_type == "aarch64" or machine_type == "aarch64_be":
         arch_string = "arm64"
         storage_uri = "https://testatharvastorage.blob.core.windows.net"
 
@@ -1837,10 +1837,10 @@ def client_side_proxy_wrapper(cmd,
 
     arch_string = ""
     storage_uri = ""
-    if machine_type == "AMD64":
+    if machine_type == "AMD64" or machine_type == "x86_64":
         arch_string = "amd64"
         storage_uri = CSP_Url
-    elif machine_type == "aarch64":
+    elif machine_type == "aarch64" or machine_type == "aarch64_be":
         arch_string = "arm64"
         storage_uri = "https://testatharvastorage.blob.core.windows.net"
 
@@ -1850,22 +1850,40 @@ def client_side_proxy_wrapper(cmd,
         raise ClientRequestError(f'The {machine_type} architecture is not currently supported in connectedk8s cli.')
 
     # Creating installation location, request uri and older version exe location depending on OS
-    if(operating_system == 'Windows'):
-        install_location_string = f'.clientproxy\\arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}{arch_string}.exe'
-        requestUri = f'{storage_uri}/{consts.RELEASE_DATE_WINDOWS}/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}{arch_string}.exe'
-        older_version_string = f'.clientproxy\\arcProxy{operating_system}*.exe'
-        creds_string = r'.azure\accessTokens.json'
+    if(arch_string == "amd64"):
+        if(operating_system == 'Windows'):
+            install_location_string = f'.clientproxy\\arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}.exe'
+            requestUri = f'{storage_uri}/{consts.RELEASE_DATE_WINDOWS}/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}.exe'
+            older_version_string = f'.clientproxy\\arcProxy{operating_system}*.exe'
+            creds_string = r'.azure\accessTokens.json'
 
-    elif(operating_system == 'Linux' or operating_system == 'Darwin'):
-        install_location_string = f'.clientproxy/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}{arch_string}'
-        requestUri = f'{storage_uri}/{consts.RELEASE_DATE_LINUX}/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}{arch_string}'
-        older_version_string = f'.clientproxy/arcProxy{operating_system}*'
-        creds_string = r'.azure/accessTokens.json'
+        elif(operating_system == 'Linux' or operating_system == 'Darwin'):
+            install_location_string = f'.clientproxy/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}'
+            requestUri = f'{storage_uri}/{consts.RELEASE_DATE_LINUX}/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}'
+            older_version_string = f'.clientproxy/arcProxy{operating_system}*'
+            creds_string = r'.azure/accessTokens.json'
 
+        else:
+            telemetry.set_exception(exception='Unsupported OS', fault_type=consts.Unsupported_Fault_Type,
+                                    summary=f'{operating_system} is not supported yet')
+            raise ClientRequestError(f'The {operating_system} platform is not currently supported.')
     else:
-        telemetry.set_exception(exception='Unsupported OS', fault_type=consts.Unsupported_Fault_Type,
-                                summary=f'{operating_system} is not supported yet')
-        raise ClientRequestError(f'The {operating_system} platform is not currently supported.')
+        if(operating_system == 'Windows'):
+            install_location_string = f'.clientproxy\\arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}{arch_string}.exe'
+            requestUri = f'{storage_uri}/{consts.RELEASE_DATE_WINDOWS}/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}{arch_string}.exe'
+            older_version_string = f'.clientproxy\\arcProxy{operating_system}*.exe'
+            creds_string = r'.azure\accessTokens.json'
+
+        elif(operating_system == 'Linux' or operating_system == 'Darwin'):
+            install_location_string = f'.clientproxy/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}{arch_string}'
+            requestUri = f'{storage_uri}/{consts.RELEASE_DATE_LINUX}/arcProxy{operating_system}{consts.CLIENT_PROXY_VERSION}{arch_string}'
+            older_version_string = f'.clientproxy/arcProxy{operating_system}*'
+            creds_string = r'.azure/accessTokens.json'
+
+        else:
+            telemetry.set_exception(exception='Unsupported OS', fault_type=consts.Unsupported_Fault_Type,
+                                    summary=f'{operating_system} is not supported yet')
+            raise ClientRequestError(f'The {operating_system} platform is not currently supported.')
 
     install_location = os.path.expanduser(os.path.join('~', install_location_string))
     args.append(install_location)
