@@ -274,6 +274,7 @@ def delete_arc_agents(release_namespace, kube_config, kube_context, helm_client_
         cmd_helm_delete = [helm_client_location, "delete", "azure-arc", "--namespace", release_namespace, "--no-hooks"]
     else:
         cmd_helm_delete = [helm_client_location, "delete", "azure-arc", "--namespace", release_namespace]
+    cmd_helm_delete.extend(["--timeout", "15m"])
     if kube_config:
         cmd_helm_delete.extend(["--kubeconfig", kube_config])
     if kube_context:
